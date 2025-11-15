@@ -54,6 +54,61 @@ def ocr_drawing(file_path, recognizer_gdt, dimension_tuple, #Must have
         cv2.imwrite(os.path.join(output_path, filename + '_mask.png'), mask_img)
         print('Mask saved')
 
+        # write a CSV of all detected boxes (type,id,x,y,width,height)
+        import csv
+        def _get_box_vals(item):
+            # try common shapes: object with x,y,w,h; dict; tuple/list (x,y,w,h)
+            if item is None:
+                return None
+            if hasattr(item, 'x') and hasattr(item, 'y') and hasattr(item, 'w') and hasattr(item, 'h'):
+                return int(item.x), int(item.y), int(item.w), int(item.h)
+            if isinstance(item, dict):
+                for kset in (('x','y','w','h'), ('X','Y','Width','Height'), ('left','top','width','height')):
+                    if all(k in item for k in kset):
+                        return int(item[kset[0]]), int(item[kset[1]]), int(item[kset[2]]), int(item[kset[3]])
+            if isinstance(item, (list, tuple)) and len(item) >= 4:
+                return int(item[0]), int(item[1]), int(item[2]), int(item[3])
+            return None
+
+        boxes_out = []
+        # tables: updated_tables may be a list of table boxes or table dicts
+        if updated_tables:
+            for i,t in enumerate(updated_tables):
+                vals = _get_box_vals(t)
+                if vals:
+                    x,y,wid,hei = vals
+                    boxes_out.append(('table', i, x, y, wid, hei))
+        # gdts
+        if updated_gdt_boxes:
+            for i,g in enumerate(updated_gdt_boxes):
+                vals = _get_box_vals(g)
+                if vals:
+                    x,y,wid,hei = vals
+                    boxes_out.append(('gdt', i, x, y, wid, hei))
+        # dimensions: 'dimensions' is usually a list of dicts/tuples
+        if dimensions:
+            for i,d in enumerate(dimensions):
+                vals = _get_box_vals(d)
+                if vals:
+                    x,y,wid,hei = vals
+                    boxes_out.append(('dim', i, x, y, wid, hei))
+        # other_info (if it contains boxes)
+        if other_info:
+            for i,o in enumerate(other_info):
+                vals = _get_box_vals(o)
+                if vals:
+                    x,y,wid,hei = vals
+                    boxes_out.append(('other', i, x, y, wid, hei))
+
+        if boxes_out:
+            csv_path = os.path.join(output_path, filename + '_boxes.csv')
+            with open(csv_path, 'w', newline='', encoding='utf-8') as cf:
+                w = csv.writer(cf)
+                w.writerow(['type','id','x','y','width','height'])
+                w.writerows(boxes_out)
+            print('Boxes CSV saved:', csv_path)
+        else:
+            print('No boxes extracted for CSV (check updated_tables/updated_gdt_boxes/dimensions shapes)')
     table_results, gdt_results, dimensions, other_info  = tools.output_tools.process_raw_output(output_path, table_results, gdt_results, dimensions, other_info, save=save_raw_output)
     end_time = time.time()
     times.append(end_time-sum(times)-start_time)
@@ -61,7 +116,7 @@ def ocr_drawing(file_path, recognizer_gdt, dimension_tuple, #Must have
 
     return {'tab': table_results, 'gdts': gdt_results, 'dim': dimensions, 'other': other_info}, times, updated_tables, img, process_img
 
-def ocr_one_drawing(file_path = '/home/javvi51/edocr2/tests/test_samples/4132864.jpg'):
+def ocr_one_drawing(file_path = '/Users/gauravpreetsingh/edocr2/tests/test_samples/C405777-REV-A.pdf'):
 
     #Session Loading
     start_time = time.time()
@@ -110,7 +165,7 @@ def ocr_one_drawing(file_path = '/home/javvi51/edocr2/tests/test_samples/4132864
         'save_raw_output': True, #Option to save raw ouput, i.e, OCR text and box position,
         }
     
-    results, times, _ = ocr_drawing(**kwargs)
+    results, times, updated_tables, img, process_img = ocr_drawing(**kwargs)
     final_time = time.time()
     print(
     "Session Timing Report:\n"
@@ -182,7 +237,7 @@ def ocr_folder(folder_path = '/home/javvi51/edocr2/tests/test_samples/Washers'):
             'save_raw_output': True, #Option to save raw ouput, i.e, OCR text and box position,
             }
         
-        results_, times_, _ = ocr_drawing(**kwargs)
+        results_, times_, updated_tables, img, process_img = ocr_drawing(**kwargs)
         results[os.path.basename(file_path)]= results_
         times.append(sum(times_))
         print(

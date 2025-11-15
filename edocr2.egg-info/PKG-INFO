@@ -1,0 +1,54 @@
+Metadata-Version: 2.4
+Name: edocr2
+Version: 0.0.1
+Summary: OCR for Engineering Mechanical Drawings
+Author: Javier Villena Toro
+Project-URL: Homepage, https://github.com/javvi51/edocr2
+Project-URL: Bug Tracker, https://github.com/javvi51/edocr2/issues
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: pdf2image
+Requires-Dist: opencv-python
+Requires-Dist: pandas
+Requires-Dist: validators
+Requires-Dist: imgaug
+Requires-Dist: scikit-image
+Requires-Dist: scikit-learn
+Requires-Dist: tqdm
+Requires-Dist: efficientnet==1.0.0
+Requires-Dist: essential_generators
+Requires-Dist: editdistance
+Requires-Dist: pyclipper
+Requires-Dist: python-dotenv
+Requires-Dist: accelerate
+Requires-Dist: tf-keras
+Requires-Dist: sentence-transformers
+Dynamic: license-file
+
+# eDOCr2
+
+A tool for performing segmentation and OCR on engineering drawings, primarily focused on mechanical or production drawings.
+
+## Installation
+
+Detailed installation steps can be found [here](https://github.com/javvi51/edocr2/blob/main/docs/install.md).
+
+## How to Use
+
+For quick testing, run the `test_drawing.py` file after downloading the recognizer models from [Releases](https://github.com/javvi51/edocr2/releases).
+
+Other files are provided for additional functionality:
+- **`test_train.py`**: For training custom synthetic recognizers or detectors.
+- **`test_all.py`**: For benchmarking against all drawings available in the `/tests` folder.
+- **`test_llm.py`**: For integration with language models (LLMs).
+
+For more detailed information about using these files, refer to the [Examples](https://github.com/javvi51/edocr2/blob/main/docs/examples.md) documentation.
+
+## Citation
+
+If you find this project useful in your research, please consider citing our paper (preprint):  
+[http://dx.doi.org/10.2139/ssrn.5045921](http://dx.doi.org/10.2139/ssrn.5045921)
