@@ -50,7 +50,16 @@ def ocr_drawing(file_path, recognizer_gdt, dimension_tuple, #Must have
         os.makedirs(output_path, exist_ok=True)
 
     if save_mask:
-        mask_img = tools.output_tools.mask_img(img, updated_gdt_boxes, updated_tables, dimensions, frame, other_info)
+        boxes_csv_path = os.path.join(output_path, filename + '_mask_boxes.csv')
+        mask_img = tools.output_tools.mask_img(
+            img,
+            updated_gdt_boxes,
+            updated_tables,
+            dimensions,
+            frame,
+            other_info,
+            bbox_csv_path=boxes_csv_path
+        )
         cv2.imwrite(os.path.join(output_path, filename + '_mask.png'), mask_img)
         print('Mask saved')
 

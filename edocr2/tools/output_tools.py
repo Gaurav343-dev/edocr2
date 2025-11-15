@@ -29,20 +29,25 @@ def mask_frame(mask_img, cl, tables, color):
 
     return result
 
-def mask_img(img, gdt_boxes, tables, dimensions, frame, other_info):
-    mask_img=img.copy()
+def mask_img(img, gdt_boxes, tables, dimensions, frame, other_info, bbox_csv_path=None):
+    mask_img = img.copy()
+    bbox_rows = []
     for table in tables:
         for tab in table:
-            pts = np.array([(tab.x, tab.y), (tab.x+tab.w, tab.y), (tab.x+tab.w, tab.y+tab.h),(tab.x,tab.y+tab.h)], np.int32)
+            pts = np.array([(tab.x, tab.y), (tab.x + tab.w, tab.y), (tab.x + tab.w, tab.y + tab.h), (tab.x, tab.y + tab.h)], np.int32)
             mask_img = mask_box(mask_img, pts, (212,242,247))
+            bbox_rows.append(pts.astype(int))
     
     for gdt in gdt_boxes:
         for g in gdt.values():
             for tab in g:
-                pts = np.array([(tab.x, tab.y), (tab.x+tab.w, tab.y), (tab.x+tab.w, tab.y+tab.h),(tab.x,tab.y+tab.h)], np.int32)
+                pts = np.array([(tab.x, tab.y), (tab.x + tab.w, tab.y), (tab.x + tab.w, tab.y + tab.h), (tab.x, tab.y + tab.h)], np.int32)
                 mask_img = mask_box(mask_img, pts, (68,136,179))
+                bbox_rows.append(pts.astype(int))
 
     if frame:
+        frame_pts = np.array([(frame.x, frame.y), (frame.x + frame.w, frame.y), (frame.x + frame.w, frame.y + frame.h), (frame.x, frame.y + frame.h)], np.int32)
+        bbox_rows.append(frame_pts.astype(int))
         mask_img = mask_frame(mask_img, frame, tables, (100*2, 78*2, 73*2))
         offset = (frame.x, frame.y)
     else:
@@ -50,14 +55,25 @@ def mask_img(img, gdt_boxes, tables, dimensions, frame, other_info):
 
     for dim in dimensions:
         box = dim[1]
-        pts=np.array([(box[0]+offset),(box[1]+offset),(box[2]+offset),(box[3]+offset)])
+        pts = np.array([(box[0] + offset), (box[1] + offset), (box[2] + offset), (box[3] + offset)], dtype=np.int32)
         mask_img = mask_box(mask_img, pts, (110,185,187))
+        bbox_rows.append(pts.astype(int))
     
     for info in other_info:
         box = info[1]
-        pts=np.array([(box[0]+offset),(box[1]+offset),(box[2]+offset),(box[3]+offset)])
+        pts = np.array([(box[0] + offset), (box[1] + offset), (box[2] + offset), (box[3] + offset)], dtype=np.int32)
         mask_img = mask_box(mask_img, pts, (128,102,90))
+        bbox_rows.append(pts.astype(int))
 
+    if bbox_csv_path:
+        bbox_dir = os.path.dirname(bbox_csv_path)
+        if bbox_dir:
+            os.makedirs(bbox_dir, exist_ok=True)
+        with open(bbox_csv_path, mode='w', newline='') as bbox_file:
+            writer = csv.writer(bbox_file)
+            writer.writerow(['x1','y1','x2','y2','x3','y3','x4','y4'])
+            for pts in bbox_rows:
+                writer.writerow(pts.reshape(-1).tolist())
    
     return mask_img
 
